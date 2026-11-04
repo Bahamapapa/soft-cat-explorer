@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soft Cat — 3D engineering explorer</title>
+<meta name="description" content="Soft Cat: interactive 3D model and engineering documentation of an AI companion robot concept. RU / EN / BG.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#eef0f3}
+a{color:#1f4f7a}a:hover{color:#123553}
+.b{min-height:36px;padding:0 12px;border:1px solid #cdd3dc;background:#fff;color:#1d2330;border-radius:8px;font:500 13px/1.1 'IBM Plex Sans',system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.b:hover{border-color:#7f8a9c}
+.b:focus-visible,.tr:focus-visible{outline:2px solid #1f4f7a;outline-offset:2px}
+.b.on{background:#1f3b5c;color:#fff;border-color:#1f3b5c}
+.b.red{border-color:#b4442c;color:#9c3520}
+.b.red.on{background:#b4442c;color:#fff}
+.b.sm{min-height:30px;padding:0 9px;font-size:12px}
+.lab{font:600 11px/1.3 'IBM Plex Sans',sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#56606f}
+.mono{font-family:'IBM Plex Mono',monospace}
+.tr{display:flex;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:6px;font:13px/1.3 'IBM Plex Sans',sans-serif;color:#1d2330;cursor:pointer;align-items:center;gap:6px;min-height:30px}
+.tr:hover{background:#eef1f5}
+.tr.on{background:#dbe6f2;color:#11314f;font-weight:600}
+.tr.asm{font-weight:600}
+.gt{width:100%;font-size:12.5px;line-height:1.4}
+.gh,.gr{display:grid;gap:0 12px;padding:7px 8px;border-bottom:1px solid #e4e7ec;align-items:start}
+.gh{color:#3e4756;font-weight:600;background:#f5f6f8;border-radius:6px 6px 0 0}
+.gr.gg{background:#f0f3f7;font-weight:600;color:#1f3b5c}
+.bd{display:inline-block;padding:2px 8px;border-radius:999px;font:600 11px/1.5 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.cf-v{background:#e1f0e4;color:#1d5a2c}
+.cf-e{background:#fbeed5;color:#6e4304}
+.cf-c{background:#ebe6f6;color:#463474}
+.st-ok{color:#1d6331;font-weight:600}
+.st-tight{color:#7a5000;font-weight:600}
+.st-bad{color:#a2341d;font-weight:600}
+input[type=range]{width:100%;accent-color:#1f3b5c}
+select{min-height:36px;border:1px solid #cdd3dc;border-radius:8px;background:#fff;font:13px 'IBM Plex Sans',sans-serif;color:#1d2330;padding:0 8px}
+.card{background:#fff;border:1px solid #dde1e7;border-radius:12px}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 12px;font-size:13px;line-height:1.45}
+.kv dt{color:#56606f}
+.kv dd{margin:0;color:#1d2330}
+ul.l{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.5;color:#283040}
+ul.l li{margin:3px 0}
+h3.h{margin:0 0 8px;font:600 15px/1.3 'IBM Plex Sans',sans-serif;color:#1d2330}
+p.p{margin:6px 0;font-size:13px;line-height:1.55;color:#283040}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/preact@10.19.3/dist/preact.min.umd.js"></script>
+<script src="i18n/ru.js"></script>
+<script src="i18n/en.js"></script>
+<script src="i18n/bg.js"></script>
+<script src="runtime.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<template id="tpl">
+<div style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1d2330; background: #eef0f3; min-height: 100vh; padding: 16px; box-sizing: border-box">
+<div style="max-width: 1680px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px">
+
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap">
+<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em">Soft Cat</h1>
+<span style="font-size: 14px; color: #4a5363">{{L.s11}}</span>
+<span class="bd cf-c">{{L.s12}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+<div role="group" aria-label="{{L.__langLabel}}" style="display: flex; gap: 4px; align-items: center">
+<sc-for list="{{langs}}" as="lx">
+<button class="{{lx.cls}}" onClick="{{lx.pick}}" aria-pressed="{{lx.pressed}}" title="{{lx.full}}" lang="{{lx.code}}">{{lx.n}}</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="lab">{{L.s13}}</span>
+<button class="b sm" onClick="{{exGLB}}">{{L.s14}}</button>
+<button class="b sm" onClick="{{exJSON}}">{{L.s15}}</button>
+<button class="b sm" onClick="{{exCSV}}">BOM CSV</button>
+<button class="b sm" onClick="{{exPNG}}">{{L.s16}}</button>
+<button class="b sm" onClick="{{exMD}}">{{L.s17}}</button>
+</div>
+</div>
+</header>
+
+
+<div class="card" style="padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center">
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="lab">{{L.s18}}</span>
+<sc-for list="{{modes}}" as="m">
+<button class="{{m.cls}}" onClick="{{m.pick}}" title="{{m.d}}" aria-pressed="{{m.pressed}}">{{m.n}}</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="lab">{{L.s19}}</span>
+<sc-for list="{{views}}" as="v">
+<button class="b sm" onClick="{{v.pick}}">{{v.n}}</button>
+</sc-for>
+<button class="{{followCls}}" onClick="{{tFollow}}" aria-pressed="{{followP}}">{{L.s20}}</button>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<label class="lab" for="sc-scheme">{{L.s21}}</label>
+<select id="sc-scheme" value="{{scheme}}" onChange="{{onScheme}}">
+<option value="cream">{{L.s22}}</option>
+<option value="smoke">{{L.s23}}</option>
+<option value="caramel">{{L.s24}}</option>
+<option value="graphite">{{L.s25}}</option>
+<option value="milk">{{L.s26}}</option>
+</select>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="lab">{{L.s27}}</span>
+<sc-for list="{{toggles}}" as="g">
+<button class="{{g.cls}}" onClick="{{g.pick}}" aria-pressed="{{g.pressed}}" title="{{g.d}}">{{g.n}}</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="lab">{{L.s28}}</span>
+<button class="{{micCls}}" onClick="{{tMic}}" aria-pressed="{{micP}}">{{L.s29}} {{micTxt}}</button>
+<button class="{{camCls}}" onClick="{{tCam}}" aria-pressed="{{camP}}">{{L.s30}} {{camTxt}}</button>
+<button class="{{estopCls}}" onClick="{{tEstop}}" aria-pressed="{{estopP}}">{{estopTxt}}</button>
+</div>
+</div>
+
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch">
+
+
+<nav class="card" aria-label="{{L.s1}}" style="flex: 1 1 250px; max-width: 320px; min-width: 230px; height: 660px; display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 12px 12px 8px; border-bottom: 1px solid #e4e7ec; display: flex; justify-content: space-between; align-items: center">
+<span class="lab">{{L.s1}}</span>
+<span class="mono" style="font-size: 11px; color: #56606f">{{compCount}} {{L.s31}}</span>
+</div>
+<div style="overflow-y: auto; padding: 6px; flex: 1">
+<button class="{{rootCls}}" onClick="{{pickRoot}}">{{L.s32}}</button>
+<sc-for list="{{tree}}" as="r">
+<button class="{{r.cls}}" onClick="{{r.pick}}" style="padding-left: {{r.pad}}px" aria-expanded="{{r.exp}}">
+<span class="mono" style="font-size: 10.5px; color: #56606f; min-width: 64px">{{r.id}}</span>
+<span style="flex: 1; min-width: 0">{{r.n}}</span>
+<span style="font-size: 11px; color: #56606f">{{r.arrow}}</span>
+</button>
+</sc-for>
+</div>
+</nav>
+
+
+<section aria-label="{{L.s2}}" style="flex: 999 1 520px; min-width: 0; height: 660px; position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #d6dbe2; background: #e9ecef">
+<canvas ref="{{canvasRef}}" data-sc3d="1" style="display: block; width: 100%; height: 100%; touch-action: none; cursor: grab" aria-label="{{L.s3}}"></canvas>
+<div style="position: absolute; left: 12px; top: 12px; max-width: 330px; background: rgba(255,255,255,0.92); border: 1px solid #dde1e7; border-radius: 10px; padding: 10px 12px; pointer-events: none">
+<div style="font-weight: 600; font-size: 13px">{{modeName}}</div>
+<div style="font-size: 12px; color: #4a5363; margin-top: 3px; line-height: 1.4">{{modeDesc}}</div>
+<sc-if value="{{showLegend}}">
+<div style="display: flex; flex-direction: column; gap: 3px; margin-top: 8px">
+<sc-for list="{{legend}}" as="lg">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #283040"><span style="width: 12px; height: 12px; border-radius: 3px; background: {{lg.c}}; border: 1px solid rgba(0,0,0,0.15)"></span>{{lg.n}}</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{isSensor}}">
+<div style="font-size: 11.5px; color: #6e4304; margin-top: 8px; line-height: 1.4">{{L.s33}}</div>
+</sc-if>
+</div>
+<sc-if value="{{hasSel}}">
+<div style="position: absolute; right: 12px; top: 12px; background: #1f3b5c; color: #fff; border-radius: 8px; padding: 7px 11px; font-size: 12.5px; max-width: 300px; pointer-events: none"><span class="mono" style="opacity: 0.8">{{selId}}</span> · {{selName}}</div>
+</sc-if>
+<sc-if value="{{estop}}">
+<div role="status" style="position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: #b4442c; color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600">{{L.s34}}</div>
+</sc-if>
+<sc-if value="{{hasTouchMsg}}">
+<div role="status" style="position: absolute; left: 12px; bottom: 44px; max-width: 420px; background: rgba(31,59,92,0.94); color: #fff; border-radius: 8px; padding: 8px 12px; font-size: 12.5px; line-height: 1.4">{{touchMsg}}</div>
+</sc-if>
+<sc-if value="{{purring}}">
+<div style="position: absolute; right: 12px; bottom: 44px; background: #fff; border: 1px solid #dde1e7; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #463474">{{L.s35}}</div>
+</sc-if>
+<sc-if value="{{charging}}">
+<div style="position: absolute; right: 12px; bottom: 78px; background: #fff; border: 1px solid #dde1e7; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #1d5a2c">{{L.s36}}</div>
+</sc-if>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 12px; background: rgba(255,255,255,0.85); font-size: 11.5px; color: #3e4756; display: flex; flex-wrap: wrap; gap: 4px 14px; pointer-events: none">
+<span>{{L.s37}}</span><span>{{L.s38}}</span><span>{{L.s39}}</span><span>{{L.s40}}</span><span>{{touchHint}}</span>
+</div>
+<sc-if value="{{loadMsgOn}}">
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #3e4756; background: #e9ecef">{{loadMsg}}</div>
+</sc-if>
+</section>
+
+
+<aside class="card" aria-label="{{L.s4}}" style="flex: 1 1 340px; max-width: 420px; min-width: 300px; height: 660px; overflow-y: auto; box-sizing: border-box; padding: 14px">
+<sc-if value="{{noSel}}">
+<div class="lab">{{L.s41}}</div>
+<h2 style="margin: 6px 0 4px; font-size: 18px">{{L.s42}}</h2>
+<p class="p">{{L.s43}}</p>
+<dl class="kv" style="margin-top: 12px">
+<dt>{{L.s44}}</dt><dd class="mono">{{compCount}}</dd>
+<dt>{{L.s45}}</dt><dd><span class="mono">{{massTxt}}</span> <span class="{{massCls}}">{{massStatus}}</span></dd>
+<dt>{{L.s46}}</dt><dd class="mono">{{bomProtoTxt}}</dd>
+<dt>{{L.s47}}</dt><dd class="mono">{{bomProdTxt}}</dd>
+<dt>{{L.s48}}</dt><dd class="mono">{{L.s49}}</dd>
+<dt>{{L.s50}}</dt><dd>{{L.s51}}</dd>
+</dl>
+<div class="lab" style="margin-top: 16px">{{L.s52}}</div>
+<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px; font-size: 12.5px">
+<div><span class="bd cf-v">{{L.s53}}</span> {{L.s54}} {{cntV}} {{L.s31}}</div>
+<div><span class="bd cf-e">{{L.s55}}</span> {{L.s56}} {{cntE}} {{L.s31}}</div>
+<div><span class="bd cf-c">{{L.s57}}</span> {{L.s58}} {{cntC}} {{L.s31}}</div>
+</div>
+<p class="p" style="margin-top: 12px; color: #6e4304">{{L.s59}}</p>
+</sc-if>
+<sc-if value="{{hasSel}}">
+<div class="lab">{{selPath}}</div>
+<h2 style="margin: 6px 0 2px; font-size: 18px; line-height: 1.3">{{selName}}</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 10px">
+<span class="mono" style="font-size: 12px; background: #eef1f5; padding: 2px 8px; border-radius: 6px">{{selId}}</span>
+<span class="{{selCfCls}}">{{selCf}}</span>
+<span style="font-size: 12px; color: #4a5363">{{selQty}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px">
+<button class="{{isoCls}}" onClick="{{tIso}}" aria-pressed="{{isoP}}">{{L.s60}}</button>
+<button class="b sm" onClick="{{clearSel}}">{{L.s61}}</button>
+<sc-if value="{{selHasMotion}}">
+<button class="b sm" onClick="{{playSelMotion}}">▶ {{selMotionName}}</button>
+</sc-if>
+</div>
+<label class="lab" for="sc-selop">{{L.s62}} {{selOpPct}}%</label>
+<input id="sc-selop" type="range" min="10" max="100" step="5" value="{{selOpVal}}" onChange="{{onSelOp}}">
+<sc-if value="{{selMoveOn}}">
+<div style="margin-top: 10px; padding: 8px 10px; background: #f3f6fa; border-radius: 8px; font-size: 12.5px; line-height: 1.45"><b>{{L.s63}}</b> {{selMove}}</div>
+</sc-if>
+<p class="p" style="margin-top: 10px">{{selDesc}}</p>
+<dl class="kv" style="margin-top: 10px; grid-template-columns: 128px minmax(0,1fr)">
+<sc-for list="{{selFields}}" as="f">
+<dt>{{f.k}}</dt><dd>{{f.v}}</dd>
+</sc-for>
+</dl>
+</sc-if>
+</aside>
+</div>
+
+
+<section class="card" aria-label="{{L.s5}}" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="lab" style="margin-right: 4px">{{L.s64}}</span>
+<sc-for list="{{demos}}" as="d">
+<button class="{{d.cls}}" onClick="{{d.pick}}" aria-pressed="{{d.pressed}}">{{d.n}}</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center">
+<button class="b on" onClick="{{tPlay}}" style="min-width: 110px; justify-content: center">{{playTxt}}</button>
+<div style="display: flex; gap: 4px; align-items: center">
+<span class="lab">{{L.s65}}</span>
+<sc-for list="{{speeds}}" as="sp">
+<button class="{{sp.cls}}" onClick="{{sp.pick}}">{{sp.n}}</button>
+</sc-for>
+</div>
+<div style="flex: 1 1 260px; min-width: 200px; display: flex; gap: 10px; align-items: center">
+<span class="mono" style="font-size: 12px; color: #3e4756; min-width: 92px">{{timeTxt}}</span>
+<input type="range" min="0" max="1000" step="1" value="{{progVal}}" onChange="{{onScrub}}" aria-label="{{L.s6}}">
+</div>
+<div style="display: flex; gap: 6px; align-items: center">
+<label class="lab" for="sc-extov">{{L.s66}}</label>
+<select id="sc-extov" value="{{extOv}}" onChange="{{onExtOv}}">
+<option value="auto">{{L.s67}}</option>
+<option value="solid">{{L.s68}}</option>
+<option value="ghost">{{L.s69}}</option>
+<option value="hide">{{L.s70}}</option>
+</select>
+</div>
+<div style="display: flex; gap: 6px; align-items: center">
+<label class="lab" for="sc-expr">{{L.s71}}</label>
+<select id="sc-expr" value="{{exprSel}}" onChange="{{onExpr}}">
+<option value="auto">{{L.s72}}</option>
+<option value="neutral">{{L.s73}}</option>
+<option value="curious">{{L.s74}}</option>
+<option value="sleepy">{{L.s75}}</option>
+<option value="happy">{{L.s76}}</option>
+<option value="surprise">{{L.s77}}</option>
+<option value="contact">{{L.s78}}</option>
+<option value="track">{{L.s79}}</option>
+</select>
+</div>
+</div>
+<div style="font-size: 12px; color: #6e4304">{{demoNote}}</div>
+
+<sc-if value="{{isExploded}}">
+<div style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 10px; background: #f5f6f8; border-radius: 10px">
+<span class="lab">{{L.s80}}</span>
+<sc-for list="{{exSubs}}" as="x">
+<button class="{{x.cls}}" onClick="{{x.pick}}">{{x.n}}</button>
+</sc-for>
+<div style="flex: 1 1 200px; display: flex; gap: 8px; align-items: center">
+<label class="lab" for="sc-exf">{{L.s81}} {{explodePct}}%</label>
+<input id="sc-exf" type="range" min="0" max="100" step="1" value="{{explodePct}}" onChange="{{onExplode}}">
+</div>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 3 1 560px; min-width: 0">
+<div class="lab" style="margin-bottom: 6px">{{L.s82}}</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px">
+<sc-for list="{{sliders}}" as="sl">
+<div>
+<label for="{{sl.fid}}" style="display: flex; justify-content: space-between; font-size: 12px; color: #3e4756"><span>{{sl.n}}</span><span class="mono">{{sl.vt}}</span></label>
+<input id="{{sl.fid}}" type="range" min="{{sl.min}}" max="{{sl.max}}" step="{{sl.step}}" value="{{sl.v}}" onChange="{{sl.on}}">
+<div class="mono" style="display: flex; justify-content: space-between; font-size: 10.5px; color: #6a7383"><span>{{sl.min}}</span><span>{{sl.max}}</span></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="flex: 1 1 280px; min-width: 0">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
+<span class="lab">{{L.s83}}</span>
+<div style="display: flex; gap: 4px">
+<sc-for list="{{legBtns}}" as="lb">
+<button class="{{lb.cls}}" onClick="{{lb.pick}}" aria-label="{{lb.full}}">{{lb.n}}</button>
+</sc-for>
+</div>
+</div>
+<div class="gt">
+<div class="gh" style="grid-template-columns: 1.4fr 1fr 1fr"><span>{{L.s84}}</span><span>{{L.s85}}</span><span>{{L.s86}}</span></div>
+<sc-for list="{{joints}}" as="j">
+<div class="gr" style="grid-template-columns: 1.4fr 1fr 1fr"><span>{{j.n}}</span><span class="mono">{{j.v}}</span><span class="mono">{{j.a}}</span></div>
+</sc-for>
+</div>
+<div class="lab" style="margin: 10px 0 6px">{{L.s87}}</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{contacts}}" as="c">
+<span style="font-size: 12px; padding: 4px 8px; border-radius: 6px; background: {{c.bg}}; color: {{c.fg}}">{{c.n}}: {{c.t}}</span>
+</sc-for>
+</div>
+<div class="mono" style="font-size: 11.5px; color: #3e4756; margin-top: 10px; line-height: 1.5">{{L.s88}} {{nYaw}}{{L.s89}} {{nPitch}}{{L.s90}} {{nRoll}}°<br>{{L.s91}} {{bH}} {{L.s92}} {{bP}}°</div>
+</div>
+</div>
+</section>
+
+
+<sc-if value="{{hasExport}}">
+<section class="card" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap">
+<span class="lab">{{L.s93}} {{exportName}} {{L.s94}}</span>
+<div style="display: flex; gap: 6px"><button class="b sm" onClick="{{copyExport}}">{{L.s95}}</button><button class="b sm" onClick="{{closeExport}}">{{L.s96}}</button></div>
+</div>
+<sc-if value="{{hasShot}}">
+<img src="{{shot}}" alt="{{L.s7}}" style="max-width: 100%; max-height: 360px; object-fit: contain; border-radius: 8px; border: 1px solid #dde1e7; align-self: flex-start">
+</sc-if>
+<sc-if value="{{hasExportText}}">
+<textarea readonly aria-label="{{L.s8}}" style="width: 100%; height: 200px; box-sizing: border-box; font: 12px/1.4 'IBM Plex Mono', monospace; border: 1px solid #cdd3dc; border-radius: 8px; padding: 8px">{{exportText}}</textarea>
+</sc-if>
+<div style="font-size: 12px; color: #4a5363">{{exportNote}}</div>
+</section>
+</sc-if>
+
+
+<section class="card" aria-label="{{L.s9}}" style="padding: 12px 14px 18px">
+<div style="display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid #e4e7ec; padding-bottom: 10px; margin-bottom: 14px">
+<sc-for list="{{tabs}}" as="tb">
+<button class="{{tb.cls}}" onClick="{{tb.pick}}" aria-pressed="{{tb.pressed}}">{{tb.n}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{tabBom}}">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 10px">
+<div style="display: flex; gap: 6px; align-items: center">
+<button class="{{bomProtoCls}}" onClick="{{bomProto}}">{{L.s97}}</button>
+<button class="{{bomProdCls}}" onClick="{{bomProd}}">{{L.s98}}</button>
+</div>
+<div style="font-size: 13px">{{L.s99}} <b class="mono">{{bomTotal}}</b> <span style="color: #56606f">{{L.s100}} {{bomRange}})</span></div>
+</div>
+<p class="p" style="color: #6e4304">{{L.s101}}</p>
+<div style="overflow-x: auto">
+<div class="gt" style="min-width: 1080px">
+<div class="gh" style="grid-template-columns: 96px 2fr 44px 90px 76px 150px 2fr 1fr"><span>ID</span><span>{{L.s102}}</span><span>{{L.s103}}</span><span>{{L.s104}}</span><span>{{L.s105}}</span><span>{{L.s106}}</span><span>{{L.s107}}</span><span>{{L.s108}}</span></div>
+<sc-for list="{{bomRows}}" as="br">
+<sc-if value="{{br.grp}}">
+<div class="gr gg" style="grid-template-columns: 96px 2fr 44px 90px 76px 150px 2fr 1fr"><span style="grid-column: 1 / 5">{{br.n}}</span><span class="mono">{{br.tot}}</span><span></span><span></span><span></span></div>
+</sc-if>
+<sc-if value="{{br.item}}">
+<div class="gr" style="grid-template-columns: 96px 2fr 44px 90px 76px 150px 2fr 1fr"><span><button class="tr" style="padding: 0; min-height: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #1f4f7a" onClick="{{br.pick}}">{{br.id}}</button></span><span>{{br.n}}</span><span class="mono">{{br.q}}</span><span class="mono">{{br.unit}}</span><span class="mono">{{br.tot}}</span><span><span class="{{br.cfCls}}">{{br.cf}}</span></span><span>{{br.alt}}</span><span>{{br.note}}</span></div>
+</sc-if>
+</sc-for>
+</div>
+</div>
+<h3 class="h" style="margin-top: 18px">{{L.s109}}</h3>
+<ul class="l">
+<li>{{L.s110}}</li>
+<li>{{L.s111}}</li>
+<li>{{L.s112}}</li>
+<li>{{L.s113}}</li>
+<li>{{L.s114}}</li>
+</ul>
+</sc-if>
+
+<sc-if value="{{tabMat}}">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px">
+<sc-for list="{{mats}}" as="mt">
+<div style="border: 1px solid #e4e7ec; border-radius: 10px; padding: 12px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; border-radius: 4px; background: {{mt.c}}; border: 1px solid rgba(0,0,0,0.15)"></span><b style="font-size: 14px">{{mt.n}}</b></div>
+<div style="font-size: 12px; color: #56606f; margin: 4px 0 8px">{{mt.fam}} {{L.s115}} {{mt.use}}</div>
+<dl class="kv" style="grid-template-columns: 112px minmax(0,1fr); font-size: 12.5px">
+<dt>{{L.s116}}</dt><dd>{{mt.tact}}</dd>
+<dt>{{L.s117}}</dt><dd>{{mt.flex}}</dd>
+<dt>{{L.s118}}</dt><dd>{{mt.dur}}</dd>
+<dt>{{L.s119}}</dt><dd>{{mt.clean}}</dd>
+<dt>{{L.s120}}</dt><dd>{{mt.mfg}}</dd>
+<dt>{{L.s121}}</dt><dd>{{mt.cost}}</dd>
+<dt>{{L.s122}}</dt><dd>{{mt.pros}}</dd>
+<dt>{{L.s123}}</dt><dd>{{mt.cons}}</dd>
+</dl>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px">
+<div style="flex: 1 1 420px">
+<h3 class="h">{{L.s124}}</h3>
+<div class="gt">
+<div class="gh" style="grid-template-columns: 1fr 2fr"><span>{{L.s125}}</span><span>{{L.s126}}</span></div>
+<sc-for list="{{tradeoffs}}" as="to"><div class="gr" style="grid-template-columns: 1fr 2fr"><span>{{to.k}}</span><span>{{to.v}}</span></div></sc-for>
+</div>
+</div>
+<div style="flex: 1 1 380px">
+<h3 class="h">{{L.s127}}</h3>
+<ul class="l">
+<sc-for list="{{coverSteps}}" as="cs"><li>{{cs.t}}</li></sc-for>
+</ul>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{tabFeas}}">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px">
+<sc-for list="{{feas}}" as="fs">
+<div style="border: 1px solid #e4e7ec; border-radius: 10px; padding: 12px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 50%; background: {{fs.c}}"></span><h3 class="h" style="margin: 0">{{fs.n}}</h3></div>
+<ul class="l"><sc-for list="{{fs.items}}" as="fi"><li>{{fi.t}}</li></sc-for></ul>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px">
+<div style="flex: 1 1 460px; min-width: 0">
+<h3 class="h">{{L.s128}}</h3>
+<div class="gt">
+<div class="gh" style="grid-template-columns: 1fr 1fr 1fr"><span>{{L.s129}}</span><span>{{L.s130}}</span><span>{{L.s131}}</span></div>
+<sc-for list="{{dofRows}}" as="dr"><div class="gr" style="grid-template-columns: 1fr 1fr 1fr"><span>{{dr.k}}</span><span>{{dr.a}}</span><span>{{dr.b}}</span></div></sc-for>
+</div>
+<p class="p"><b>{{L.s132}}</b> {{L.s133}}</p>
+</div>
+<div style="flex: 1 1 400px; min-width: 0">
+<h3 class="h">{{L.s134}}</h3>
+<ul class="l"><sc-for list="{{torque}}" as="tq"><li>{{tq.t}}</li></sc-for></ul>
+<h3 class="h" style="margin-top: 14px">{{L.s135}}</h3>
+<ul class="l"><sc-for list="{{simNeeds}}" as="sn"><li>{{sn.t}}</li></sc-for></ul>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{tabPow}}">
+<p class="p">{{L.s136}}</p>
+<div style="overflow-x: auto"><div class="gt" style="min-width: 720px">
+<div class="gh" style="grid-template-columns: 1.4fr 80px 90px 70px 2fr"><span>{{L.s137}}</span><span>{{L.s138}}</span><span>{{L.s139}}</span><span>{{L.s140}}</span><span>{{L.s141}}</span></div>
+<sc-for list="{{powRows}}" as="pw"><div class="gr" style="grid-template-columns: 1.4fr 80px 90px 70px 2fr"><span>{{pw.n}}</span><span class="mono">{{pw.i}}</span><span class="mono">{{pw.t}}</span><span class="mono">{{pw.p}}</span><span>{{pw.a}}</span></div></sc-for>
+</div></div>
+<h3 class="h" style="margin-top: 16px">{{L.s142}}</h3>
+<div style="overflow-x: auto"><div class="gt" style="min-width: 720px">
+<div class="gh" style="grid-template-columns: 2fr 120px 110px 2fr"><span>{{L.s143}}</span><span>{{L.s144}}</span><span>{{L.s145}}</span><span>{{L.s146}}</span></div>
+<sc-for list="{{runRows}}" as="rr"><div class="gr" style="grid-template-columns: 2fr 120px 110px 2fr"><span>{{rr.n}}</span><span class="mono">{{rr.w}}</span><span class="mono">{{rr.h}}</span><span>{{rr.a}}</span></div></sc-for>
+</div></div>
+<h3 class="h" style="margin-top: 16px">{{L.s147}}</h3>
+<ul class="l"><sc-for list="{{thermal}}" as="th"><li>{{th.t}}</li></sc-for></ul>
+</sc-if>
+
+<sc-if value="{{tabDim}}">
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<figure style="margin: 0; flex: 2 1 560px; min-width: 0">
+<svg viewBox="0 0 760 420" role="img" aria-label="{{L.s10}}" style="width: 100%; height: auto; background: #fafbfc; border: 1px solid #e4e7ec; border-radius: 10px">
+<g font-family="IBM Plex Mono, monospace" font-size="11" fill="#3e4756">
+<line x1="20" y1="360" x2="600" y2="360" stroke="#9aa3ae" stroke-width="1"></line>
+<ellipse cx="270" cy="203" rx="166" ry="56" fill="#efe3cf" stroke="#8a7a62" stroke-width="1.2"></ellipse>
+<ellipse cx="465" cy="147" rx="59" ry="54" fill="#efe3cf" stroke="#8a7a62" stroke-width="1.2"></ellipse>
+<path d="M455 98 L470 52 L494 104 Z" fill="#e0cdb0" stroke="#8a7a62" stroke-width="1.2"></path>
+<path d="M126 190 C 70 175, 40 120, 70 96" fill="none" stroke="#8a7a62" stroke-width="16" stroke-linecap="round"></path>
+<rect x="381" y="228" width="18" height="124" rx="8" fill="#e6d6bd" stroke="#8a7a62"></rect>
+<rect x="149" y="228" width="18" height="124" rx="8" fill="#e6d6bd" stroke="#8a7a62"></rect>
+<ellipse cx="395" cy="353" rx="22" ry="7" fill="#d9a6a0"></ellipse>
+<ellipse cx="163" cy="353" rx="22" ry="7" fill="#d9a6a0"></ellipse>
+<circle cx="500" cy="140" r="9" fill="#1b2430"></circle>
+<line x1="104" y1="390" x2="436" y2="390" stroke="#1f3b5c"></line><line x1="104" y1="384" x2="104" y2="396" stroke="#1f3b5c"></line><line x1="436" y1="384" x2="436" y2="396" stroke="#1f3b5c"></line>
+<text x="230" y="405">{{L.s148}}</text>
+<line x1="104" y1="30" x2="524" y2="30" stroke="#1f3b5c"></line><line x1="104" y1="24" x2="104" y2="36" stroke="#1f3b5c"></line><line x1="524" y1="24" x2="524" y2="36" stroke="#1f3b5c"></line>
+<text x="200" y="22">{{L.s149}}</text>
+<line x1="590" y1="360" x2="590" y2="93" stroke="#1f3b5c"></line><line x1="584" y1="93" x2="596" y2="93" stroke="#1f3b5c"></line><line x1="584" y1="360" x2="596" y2="360" stroke="#1f3b5c"></line>
+<text x="600" y="225">{{L.s150}}</text>
+<text x="600" y="240">{{L.s151}}</text>
+<line x1="620" y1="360" x2="620" y2="52" stroke="#a2341d" stroke-dasharray="4 3"></line>
+<text x="600" y="60" fill="#a2341d">{{L.s152}}</text>
+<line x1="60" y1="360" x2="60" y2="230" stroke="#1f3b5c"></line>
+<text x="22" y="300">{{L.s153}}</text><text x="22" y="314">≈ 230</text>
+<line x1="350" y1="360" x2="350" y2="235" stroke="#9aa3ae" stroke-dasharray="3 3"></line>
+<text x="356" y="300">{{L.s154}}</text>
+<text x="20" y="372">{{L.s155}}</text>
+<g transform="translate(680,0)">
+<line x1="-10" y1="360" x2="70" y2="360" stroke="#9aa3ae"></line>
+<circle cx="30" cy="87" r="13" fill="#c9ced6"></circle>
+<rect x="17" y="102" width="26" height="120" rx="10" fill="#c9ced6"></rect>
+<rect x="18" y="222" width="10" height="138" rx="5" fill="#c9ced6"></rect>
+<rect x="32" y="222" width="10" height="138" rx="5" fill="#c9ced6"></rect>
+<ellipse cx="-2" cy="352" rx="12" ry="8" fill="#e0cdb0"></ellipse>
+<text x="-14" y="66">1750</text>
+<text x="-24" y="388">{{L.s156}}</text>
+</g>
+</g>
+</svg>
+<figcaption style="font-size: 12px; color: #4a5363; margin-top: 6px">{{L.s157}}</figcaption>
+</figure>
+<div style="flex: 1 1 380px; min-width: 0">
+<h3 class="h">{{L.s158}}</h3>
+<div class="gt">
+<div class="gh" style="grid-template-columns: 1.5fr 1fr 1fr 1fr"><span>{{L.s159}}</span><span>{{L.s160}}</span><span>{{L.s161}}</span><span>{{L.s162}}</span></div>
+<sc-for list="{{dimRows}}" as="dm"><div class="gr" style="grid-template-columns: 1.5fr 1fr 1fr 1fr"><span>{{dm.n}}</span><span class="mono">{{dm.t}}</span><span class="mono">{{dm.m}}</span><span class="{{dm.cls}}">{{dm.s}}</span></div></sc-for>
+</div>
+</div>
+</div>
+<h3 class="h" style="margin-top: 18px">{{L.s163}}</h3>
+<p class="p">{{L.s164}}</p>
+<div style="overflow-x: auto"><div class="gt" style="min-width: 760px">
+<div class="gh" style="grid-template-columns: 1fr 2fr 100px 2fr"><span>{{L.s165}}</span><span>{{L.s166}}</span><span>{{L.s162}}</span><span>{{L.s167}}</span></div>
+<sc-for list="{{packRows}}" as="pk"><div class="gr" style="grid-template-columns: 1fr 2fr 100px 2fr"><span>{{pk.z}}</span><span>{{pk.c}}</span><span class="{{pk.cls}}">{{pk.s}}</span><span>{{pk.r}}</span></div></sc-for>
+</div></div>
+<h3 class="h" style="margin-top: 18px">{{L.s168}}</h3>
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 760px">
+<sc-for list="{{massRows}}" as="ms">
+<div style="display: grid; grid-template-columns: 230px minmax(0,1fr) 70px; gap: 10px; align-items: center; font-size: 12.5px">
+<span>{{ms.n}}</span>
+<span style="height: 12px; background: #eef1f5; border-radius: 6px; overflow: hidden"><span style="display: block; height: 100%; width: {{ms.w}}%; background: #1f3b5c"></span></span>
+<span class="mono" style="text-align: right">{{ms.g}} {{L.s169}}</span>
+</div>
+</sc-for>
+</div>
+<p class="p">{{L.s170}} <b class="mono">{{massTxt}}</b> {{L.s171}} <span class="{{massCls}}">{{massStatus}}</span> {{L.s172}}</p>
+</sc-if>
+
+<sc-if value="{{tabAI}}">
+<div style="display: flex; flex-wrap: wrap; gap: 14px">
+<div style="flex: 3 1 560px; min-width: 0; border: 2px solid #1f3b5c; border-radius: 12px; padding: 12px">
+<div class="lab" style="color: #1f3b5c">{{L.s173}}</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px">
+<sc-for list="{{aiLocal}}" as="ai">
+<div style="border: 1px solid #c8d3e0; background: #f4f7fb; border-radius: 10px; padding: 10px">
+<div style="font-weight: 600; font-size: 13.5px">{{ai.n}}</div>
+<div style="font-size: 12px; color: #3e4756; margin-top: 4px; line-height: 1.45">{{ai.d}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="flex: 2 1 340px; min-width: 0; border: 2px dashed #7a5aa8; border-radius: 12px; padding: 12px">
+<div class="lab" style="color: #463474">{{L.s174}}</div>
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px">
+<sc-for list="{{aiCloud}}" as="ac">
+<div style="border: 1px solid #d8cfec; background: #f7f4fc; border-radius: 10px; padding: 10px">
+<div style="font-weight: 600; font-size: 13.5px">{{ac.n}}</div>
+<div style="font-size: 12px; color: #3e4756; margin-top: 4px; line-height: 1.45">{{ac.d}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+<h3 class="h" style="margin-top: 16px">{{L.s175}}</h3>
+<div style="overflow-x: auto"><div class="gt" style="min-width: 680px">
+<div class="gh" style="grid-template-columns: 1fr 24px 1fr 2fr"><span>{{L.s176}}</span><span></span><span>{{L.s177}}</span><span>{{L.s178}}</span></div>
+<sc-for list="{{aiFlows}}" as="af"><div class="gr" style="grid-template-columns: 1fr 24px 1fr 2fr"><span>{{af.a}}</span><span aria-hidden="true">→</span><span>{{af.b}}</span><span>{{af.d}}</span></div></sc-for>
+</div></div>
+<p class="p"><b>{{L.s179}}</b> {{L.s180}}</p>
+</sc-if>
+
+<sc-if value="{{tabSafe}}">
+<div style="overflow-x: auto"><div class="gt" style="min-width: 760px">
+<div class="gh" style="grid-template-columns: 1fr 2.4fr 1fr 1.2fr"><span>{{L.s181}}</span><span>{{L.s182}}</span><span>{{L.s183}}</span><span>{{L.s184}}</span></div>
+<sc-for list="{{risks}}" as="rk"><div class="gr" style="grid-template-columns: 1fr 2.4fr 1fr 1.2fr"><span style="font-weight: 600">{{rk.r}}</span><span>{{rk.m}}</span><span class="mono" style="font-size: 12px">{{rk.ids}}</span><span>{{rk.res}}</span></div></sc-for>
+</div></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px">
+<div style="flex: 1 1 420px">
+<h3 class="h">{{L.s28}}</h3>
+<ul class="l"><sc-for list="{{privacy}}" as="pv"><li>{{pv.t}}</li></sc-for></ul>
+</div>
+<div style="flex: 1 1 380px">
+<h3 class="h">{{L.s185}}</h3>
+<ul class="l"><sc-for list="{{hwSafety}}" as="hs"><li>{{hs.t}}</li></sc-for></ul>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{tabDfm}}">
+<div style="overflow-x: auto"><div class="gt" style="min-width: 620px">
+<div class="gh" style="grid-template-columns: 1fr 110px 3fr"><span>{{L.s186}}</span><span>{{L.s187}}</span><span>{{L.s188}}</span></div>
+<sc-for list="{{dfm}}" as="df"><div class="gr" style="grid-template-columns: 1fr 110px 3fr"><span style="font-weight: 600">{{df.k}}</span><span class="{{df.cls}}">{{df.s}}</span><span>{{df.c}}</span></div></sc-for>
+</div></div>
+<h3 class="h" style="margin-top: 16px">{{L.s189}}</h3>
+<ul class="l"><sc-for list="{{assembly}}" as="as"><li>{{as.t}}</li></sc-for></ul>
+</sc-if>
+
+<sc-if value="{{tabSys}}">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px">
+<sc-for list="{{systems}}" as="sy">
+<div style="border: 1px solid #e4e7ec; border-radius: 10px; padding: 12px">
+<h3 class="h">{{sy.n}}</h3>
+<ul class="l"><sc-for list="{{sy.items}}" as="si"><li>{{si.t}}</li></sc-for></ul>
+</div>
+</sc-for>
+</div>
+<h3 class="h" style="margin-top: 16px">{{L.s190}}</h3>
+<div style="overflow-x: auto"><div class="gt" style="min-width: 760px">
+<div class="gh" style="grid-template-columns: 1.3fr 1.5fr 1fr 110px 1.5fr"><span>{{L.s191}}</span><span>{{L.s192}}</span><span>{{L.s193}}</span><span>{{L.s194}}</span><span>{{L.s195}}</span></div>
+<sc-for list="{{lidRows}}" as="lr"><div class="gr" style="grid-template-columns: 1.3fr 1.5fr 1fr 110px 1.5fr"><span style="font-weight: 600">{{lr.n}}</span><span>{{lr.e}}</span><span>{{lr.c}}</span><span class="mono">{{lr.p}}</span><span>{{lr.r}}</span></div></sc-for>
+</div></div>
+<h3 class="h" style="margin-top: 16px">{{L.s196}}</h3>
+<div class="gt">
+<div class="gh" style="grid-template-columns: 1fr 1.4fr 2fr"><span>{{L.s165}}</span><span>{{L.s197}}</span><span>{{L.s198}}</span></div>
+<sc-for list="{{touchRows}}" as="tr"><div class="gr" style="grid-template-columns: 1fr 1.4fr 2fr"><span>{{tr.z}}</span><span>{{tr.s}}</span><span>{{tr.r}}</span></div></sc-for>
+</div>
+</sc-if>
+</section>
+
+<footer style="font-size: 12px; color: #4a5363; padding: 4px 2px 16px; line-height: 1.5">{{L.s199}}</footer>
+</div>
+</div>
+</template>
+<script src="app.js"></script>
+</body>
+</html>
